@@ -53,15 +53,16 @@ export class D3PieComponent implements OnChanges, OnDestroy {
     arcs.append('path')
       .attr('d', path)
       .attr('fill', (d, i) => d.data.color ?? color(i.toString()))
-      .style('cursor', 'pointer') // Set cursor to pointer
+      .style('cursor', 'pointer')
       .on('click', (event, d) => this.arcClick.emit(d.data))
       .on('mouseover', function (event, d) {
         d3.select(this)
           .transition()
           .duration(150)
-          .attr('stroke', d.data.color ?? color(d.index.toString())) // Use arc color for stroke
-          .attr('stroke-width', 3)
-          .attr('opacity', 0.8);
+          .attr('stroke', d.data.color ?? color(d.index.toString()))
+          .attr('stroke-width', 2)
+          .attr('opacity', 0.7)
+          .attr('transform', 'scale(1.02)'); // Slightly bigger
       })
       .on('mouseout', function (event, d) {
         d3.select(this)
@@ -69,7 +70,8 @@ export class D3PieComponent implements OnChanges, OnDestroy {
           .duration(150)
           .attr('stroke', null)
           .attr('stroke-width', null)
-          .attr('opacity', 1);
+          .attr('opacity', 1)
+          .attr('transform', 'scale(1)'); // Back to normal size
       });
 
     arcs.append('text')
