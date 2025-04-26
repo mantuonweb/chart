@@ -1,2 +1,13 @@
 <app-d3-pie [data]="data" [width]="200" [height]="200" (arcClick)="onArcClick($event)">
 </app-d3-pie>
+<!-- <app-chartjs-pie [data]="data" [width]="200" [height]="200" (segmentClick)="onArcClick($event)"> -->
+
+  <app-chartjs-pie 
+  [data]="data" 
+  [width]="200" 
+  [height]="200"
+  [showInlineLabels]="true"
+  [labelFormat]="'label-percentage'"
+  [showLegend]="false"
+  (segmentClick)="onArcClick($event)">
+</app-chartjs-pie>
