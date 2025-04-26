@@ -1,4 +1,4 @@
-import { Component, ElementRef, input, viewChild, OnChanges, OnDestroy, output } from '@angular/core';
+import { Component, ElementRef, input, viewChild, OnDestroy, output, effect } from '@angular/core';
 import * as d3 from 'd3';
 
 @Component({
@@ -6,16 +6,17 @@ import * as d3 from 'd3';
   template: `<svg #chart [attr.width]="width()" [attr.height]="height()"></svg>`,
   standalone: true
 })
-export class D3PieComponent implements OnChanges, OnDestroy {
+export class D3PieComponent implements OnDestroy {
   data = input<{ label: string, value: number, color?: string }[]>([]);
   width = input(300);
   height = input(300);
   chartContainer = viewChild<ElementRef<SVGSVGElement>>('chart');
   arcClick = output<{ label: string, value: number }>();
 
-  ngOnChanges() {
+  // Set up the effect to redraw the chart when inputs change
+  private chartEffect = effect(() => {
     this.drawChart();
-  }
+  });
 
   ngOnDestroy() {
     // Clear the SVG and remove all D3 event listeners
@@ -23,6 +24,8 @@ export class D3PieComponent implements OnChanges, OnDestroy {
     if (chartRef) {
       d3.select(chartRef.nativeElement).selectAll('*').remove();
     }
+    // Optionally, destroy the effect if needed (not required in most cases)
+    // this.chartEffect.destroy();
   }
 
   private drawChart() {
@@ -62,7 +65,7 @@ export class D3PieComponent implements OnChanges, OnDestroy {
           .attr('stroke', d.data.color ?? color(d.index.toString()))
           .attr('stroke-width', 2)
           .attr('opacity', 0.7)
-          .attr('transform', 'scale(1.02)'); // Slightly bigger
+          .attr('transform', 'scale(1.02)');
       })
       .on('mouseout', function (event, d) {
         d3.select(this)
@@ -71,7 +74,7 @@ export class D3PieComponent implements OnChanges, OnDestroy {
           .attr('stroke', null)
           .attr('stroke-width', null)
           .attr('opacity', 1)
-          .attr('transform', 'scale(1)'); // Back to normal size
+          .attr('transform', 'scale(1)');
       });
 
     arcs.append('text')
