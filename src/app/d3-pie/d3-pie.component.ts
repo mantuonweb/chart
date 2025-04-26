@@ -167,6 +167,10 @@ export class D3PieComponent implements OnDestroy {
           .style('opacity', 1)
           .style('left', (event.pageX + 10) + 'px')
           .style('top', (event.pageY - 25) + 'px')
+          .style('fill', 'white')
+          .style('font-family', 'Helvetica, Arial, sans-serif')
+          .style('font-size', '10px')
+          .style('font-weight', 'bold')
           .html(`<strong>${d.data.label}</strong>: ${d.data.value}`);
       })
       // Remove highlight on mouseout and hide tooltip
@@ -219,6 +223,10 @@ export class D3PieComponent implements OnDestroy {
           .style('opacity', 1)
           .style('left', (event.pageX + 10) + 'px')
           .style('top', (event.pageY - 25) + 'px')
+          .style('fill', 'white')
+          .style('font-family', 'Helvetica, Arial, sans-serif')
+          .style('font-size', '10px')
+          .style('font-weight', 'bold')
           .html(`<strong>${d.data.label}</strong>: ${d.data.value}`);
       })
       // Remove highlight from arc when mouse leaves label and hide tooltip
