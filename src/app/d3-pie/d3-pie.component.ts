@@ -19,7 +19,10 @@ import * as d3 from 'd3';
  */
 @Component({
   selector: 'app-d3-pie',
-  template: `<svg #chart [attr.width]="width()" [attr.height]="height()"></svg>`,
+  template: `
+    <svg #chart [attr.width]="width()" [attr.height]="height()"></svg>
+    <div class="tooltip" style="position: absolute; opacity: 0; background: rgba(0,0,0,0.7); color: white; padding: 5px; border-radius: 3px; pointer-events: none;"></div>
+  `,
   standalone: true
 })
 export class D3PieComponent implements OnDestroy {
@@ -119,6 +122,10 @@ export class D3PieComponent implements OnDestroy {
     const svg = d3.select(chartRef.nativeElement);
     svg.selectAll('*').remove();
 
+    // Create tooltip div
+    const tooltip = d3.select(chartRef.nativeElement.parentNode as any)
+      .select('.tooltip');
+
     // Create a group element centered in the SVG
     const g = svg.append('g').attr('transform', `translate(${width / 2},${height / 2})`);
 
@@ -144,8 +151,9 @@ export class D3PieComponent implements OnDestroy {
       .style('cursor', 'pointer')
       // Emit arcClick event on click
       .on('click', (event, d) => this.arcClick.emit(d.data))
-      // Highlight arc on mouseover
+      // Highlight arc on mouseover and show tooltip
       .on('mouseover', function (event, d) {
+        // Highlight the arc
         d3.select(this)
           .transition()
           .duration(150)
@@ -153,9 +161,17 @@ export class D3PieComponent implements OnDestroy {
           .attr('stroke-width', 2)
           .attr('opacity', 0.7)
           .attr('transform', 'scale(1.02)');
+          
+        // Show tooltip
+        tooltip
+          .style('opacity', 1)
+          .style('left', (event.pageX + 10) + 'px')
+          .style('top', (event.pageY - 25) + 'px')
+          .html(`<strong>${d.data.label}</strong>: ${d.data.value}`);
       })
-      // Remove highlight on mouseout
+      // Remove highlight on mouseout and hide tooltip
       .on('mouseout', function (event, d) {
+        // Remove highlight
         d3.select(this)
           .transition()
           .duration(150)
@@ -163,6 +179,15 @@ export class D3PieComponent implements OnDestroy {
           .attr('stroke-width', null)
           .attr('opacity', 1)
           .attr('transform', 'scale(1)');
+          
+        // Hide tooltip
+        tooltip.style('opacity', 0);
+      })
+      // Move tooltip with mouse
+      .on('mousemove', function(event) {
+        tooltip
+          .style('left', (event.pageX + 10) + 'px')
+          .style('top', (event.pageY - 25) + 'px');
       });
 
     // Add labels to each arc and emit arcClick on label click
@@ -178,7 +203,7 @@ export class D3PieComponent implements OnDestroy {
       .text(d => d.data.label)
       // Emit arcClick event on label click
       .on('click', (event, d) => this.arcClick.emit(d.data))
-      // Highlight arc when hovering over label
+      // Highlight arc when hovering over label and show tooltip
       .on('mouseover', function (event, d) {
         // Select the corresponding arc path and apply the same highlight
         d3.select(this.parentNode as any).select('path')
@@ -188,8 +213,15 @@ export class D3PieComponent implements OnDestroy {
           .attr('stroke-width', 2)
           .attr('opacity', 0.7)
           .attr('transform', 'scale(1.02)');
+          
+        // Show tooltip
+        tooltip
+          .style('opacity', 1)
+          .style('left', (event.pageX + 10) + 'px')
+          .style('top', (event.pageY - 25) + 'px')
+          .html(`<strong>${d.data.label}</strong>: ${d.data.value}`);
       })
-      // Remove highlight from arc when mouse leaves label
+      // Remove highlight from arc when mouse leaves label and hide tooltip
       .on('mouseout', function (event, d) {
         d3.select(this.parentNode as any).select('path')
           .transition()
@@ -198,6 +230,15 @@ export class D3PieComponent implements OnDestroy {
           .attr('stroke-width', null)
           .attr('opacity', 1)
           .attr('transform', 'scale(1)');
+          
+        // Hide tooltip
+        tooltip.style('opacity', 0);
+      })
+      // Move tooltip with mouse
+      .on('mousemove', function(event) {
+        tooltip
+          .style('left', (event.pageX + 10) + 'px')
+          .style('top', (event.pageY - 25) + 'px');
       });
   }
 }
