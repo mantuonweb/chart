@@ -6,6 +6,16 @@ import * as d3 from 'd3';
  * 
  * Angular standalone component for rendering a reactive D3 pie chart.
  * Uses Angular signals and effects for automatic redraw on input changes.
+ * 
+ * @example
+ * 
+ * <app-d3-pie
+ *   [data]="pieData"
+ *   [width]="500"
+ *   [height]="400"
+ *   (arcClick)="handleArcClick($event)">
+ * </app-d3-pie>
+ * 
  */
 @Component({
   selector: 'app-d3-pie',
@@ -16,27 +26,55 @@ export class D3PieComponent implements OnDestroy {
   /**
    * Reactive input for pie chart data.
    * Each data item can have a label, value, and optional color.
+   * 
+   * @example
+   * 
+   * const pieData = [
+   *   { label: 'Category A', value: 30, color: '#ff0000' },
+   *   { label: 'Category B', value: 50 },
+   *   { label: 'Category C', value: 20, color: '#0000ff' }
+   * ];
+   * 
    */
   data = input<{ label: string, value: number, color?: string }[]>([]);
 
-  /** Reactive input for chart width (default: 300) */
+  /** 
+   * Reactive input for chart width in pixels.
+   * @default 300
+   */
   width = input(300);
 
-  /** Reactive input for chart height (default: 300) */
+  /** 
+   * Reactive input for chart height in pixels.
+   * @default 300
+   */
   height = input(300);
 
-  /** Reference to the SVG element in the template */
+  /** 
+   * Reference to the SVG element in the template.
+   * Used to manipulate the chart with D3.
+   */
   chartContainer = viewChild<ElementRef<SVGSVGElement>>('chart');
 
   /**
    * Output event emitted when an arc is clicked.
    * Emits the data object for the clicked arc.
+   * 
+   * @event
+   * @example
+   * 
+   * handleArcClick(data: { label: string, value: number }) {
+   *   console.log(`Clicked on ${data.label} with value ${data.value}`);
+   * }
+   * 
    */
   arcClick = output<{ label: string, value: number }>();
 
   /**
    * Effect: redraws the chart whenever any input signal changes.
    * Automatically tracks dependencies on data, width, and height.
+   * 
+   * @private
    */
   private chartEffect = effect(() => {
     this.drawChart();
@@ -44,6 +82,7 @@ export class D3PieComponent implements OnDestroy {
 
   /**
    * Lifecycle hook: cleans up the SVG and D3 event listeners on destroy.
+   * Prevents memory leaks by removing all D3 elements and event handlers.
    */
   ngOnDestroy() {
     // On destroy, clear the SVG and remove all D3 event listeners
@@ -58,6 +97,14 @@ export class D3PieComponent implements OnDestroy {
   /**
    * Draws or redraws the pie chart using D3.
    * Called automatically by the effect when inputs change.
+   * 
+   * The chart includes:
+   * - Pie segments with colors based on data or D3's color scheme
+   * - Text labels positioned at the center of each segment
+   * - Hover effects (scaling, opacity changes)
+   * - Click handlers for both segments and labels
+   * 
+   * @private
    */
   private drawChart() {
     const chartRef = this.chartContainer();
