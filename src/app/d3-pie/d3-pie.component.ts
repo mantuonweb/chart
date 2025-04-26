@@ -170,6 +170,10 @@ export class D3PieComponent implements OnDestroy {
       .attr('transform', d => `translate(${path.centroid(d)})`)
       .attr('dy', '0.35em')
       .style('text-anchor', 'middle')
+      .style('fill', 'white')
+      .style('font-family', 'Helvetica, Arial, sans-serif')
+      .style('font-size', '10px')
+      .style('font-weight', 'bold')
       .style('cursor', 'pointer')
       .text(d => d.data.label)
       // Emit arcClick event on label click
