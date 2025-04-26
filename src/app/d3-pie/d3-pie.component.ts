@@ -1,25 +1,52 @@
 import { Component, ElementRef, input, viewChild, OnDestroy, output, effect } from '@angular/core';
 import * as d3 from 'd3';
 
+/**
+ * D3PieComponent
+ * 
+ * Angular standalone component for rendering a reactive D3 pie chart.
+ * Uses Angular signals and effects for automatic redraw on input changes.
+ */
 @Component({
   selector: 'app-d3-pie',
   template: `<svg #chart [attr.width]="width()" [attr.height]="height()"></svg>`,
   standalone: true
 })
 export class D3PieComponent implements OnDestroy {
+  /**
+   * Reactive input for pie chart data.
+   * Each data item can have a label, value, and optional color.
+   */
   data = input<{ label: string, value: number, color?: string }[]>([]);
+
+  /** Reactive input for chart width (default: 300) */
   width = input(300);
+
+  /** Reactive input for chart height (default: 300) */
   height = input(300);
+
+  /** Reference to the SVG element in the template */
   chartContainer = viewChild<ElementRef<SVGSVGElement>>('chart');
+
+  /**
+   * Output event emitted when an arc is clicked.
+   * Emits the data object for the clicked arc.
+   */
   arcClick = output<{ label: string, value: number }>();
 
-  // Set up the effect to redraw the chart when inputs change
+  /**
+   * Effect: redraws the chart whenever any input signal changes.
+   * Automatically tracks dependencies on data, width, and height.
+   */
   private chartEffect = effect(() => {
     this.drawChart();
   });
 
+  /**
+   * Lifecycle hook: cleans up the SVG and D3 event listeners on destroy.
+   */
   ngOnDestroy() {
-    // Clear the SVG and remove all D3 event listeners
+    // On destroy, clear the SVG and remove all D3 event listeners
     const chartRef = this.chartContainer();
     if (chartRef) {
       d3.select(chartRef.nativeElement).selectAll('*').remove();
@@ -28,36 +55,49 @@ export class D3PieComponent implements OnDestroy {
     // this.chartEffect.destroy();
   }
 
+  /**
+   * Draws or redraws the pie chart using D3.
+   * Called automatically by the effect when inputs change.
+   */
   private drawChart() {
     const chartRef = this.chartContainer();
     if (!chartRef) return;
 
+    // Get current width, height, and calculate radius
     const width = this.width();
     const height = this.height();
     const radius = Math.min(width, height) / 2;
 
+    // Select the SVG and clear previous content
     const svg = d3.select(chartRef.nativeElement);
     svg.selectAll('*').remove();
 
+    // Create a group element centered in the SVG
     const g = svg.append('g').attr('transform', `translate(${width / 2},${height / 2})`);
 
+    // Set up color scale
     const color = d3.scaleOrdinal(d3.schemeCategory10);
 
+    // Set up pie layout and arc generator
     const pie = d3.pie<{ label: string, value: number, color?: string }>().value(d => d.value);
     const path = d3.arc<d3.PieArcDatum<{ label: string, value: number, color?: string }>>()
       .outerRadius(radius - 10)
       .innerRadius(0);
 
+    // Bind data and create arc groups
     const arcs = g.selectAll('.arc')
       .data(pie(this.data()))
       .enter().append('g')
       .attr('class', 'arc');
 
+    // Draw arc paths and set up event handlers
     arcs.append('path')
       .attr('d', path)
       .attr('fill', (d, i) => d.data.color ?? color(i.toString()))
       .style('cursor', 'pointer')
+      // Emit arcClick event on click
       .on('click', (event, d) => this.arcClick.emit(d.data))
+      // Highlight arc on mouseover
       .on('mouseover', function (event, d) {
         d3.select(this)
           .transition()
@@ -67,6 +107,7 @@ export class D3PieComponent implements OnDestroy {
           .attr('opacity', 0.7)
           .attr('transform', 'scale(1.02)');
       })
+      // Remove highlight on mouseout
       .on('mouseout', function (event, d) {
         d3.select(this)
           .transition()
@@ -77,10 +118,35 @@ export class D3PieComponent implements OnDestroy {
           .attr('transform', 'scale(1)');
       });
 
+    // Add labels to each arc and emit arcClick on label click
     arcs.append('text')
       .attr('transform', d => `translate(${path.centroid(d)})`)
       .attr('dy', '0.35em')
       .style('text-anchor', 'middle')
-      .text(d => d.data.label);
+      .style('cursor', 'pointer')
+      .text(d => d.data.label)
+      // Emit arcClick event on label click
+      .on('click', (event, d) => this.arcClick.emit(d.data))
+      // Highlight arc when hovering over label
+      .on('mouseover', function (event, d) {
+        // Select the corresponding arc path and apply the same highlight
+        d3.select(this.parentNode as any).select('path')
+          .transition()
+          .duration(150)
+          .attr('stroke', d.data.color ?? color(d.index.toString()))
+          .attr('stroke-width', 2)
+          .attr('opacity', 0.7)
+          .attr('transform', 'scale(1.02)');
+      })
+      // Remove highlight from arc when mouse leaves label
+      .on('mouseout', function (event, d) {
+        d3.select(this.parentNode as any).select('path')
+          .transition()
+          .duration(150)
+          .attr('stroke', null)
+          .attr('stroke-width', null)
+          .attr('opacity', 1)
+          .attr('transform', 'scale(1)');
+      });
   }
 }
